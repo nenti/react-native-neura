@@ -10,7 +10,7 @@
 
 Adding the library to the project
   - Run the following command at your project root directory:
-    `$ npm i react-native-neura-integration`
+    `$ npm i react-native-neura`
   - (Github repository: https://github.com/NeuraLabs/react-native-neura.git)
 
 ### Android specific instructions
