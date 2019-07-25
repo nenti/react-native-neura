@@ -2,7 +2,7 @@
   "name": "react-native-neura",
   "version": "1.0.2",
   "description": "React native Neura SDK wrapper",
-  "main": "index",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,10 +10,13 @@
     "react-native"
   ],
   "license": "UNLICENSED",
-  "author": "",
-  "homepage": "",
+  "author": {
+    "name": "Jonathan Tadmor",
+    "email": "jon@theneura.com"
+  },
+  "homepage": "https://github.com/NeuraLabs/react-native-neura",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/NeuraLabs/react-native-neura.git"
+    "url": "https://github.com/NeuraLabs/react-native-neura.git"
   }
 }
