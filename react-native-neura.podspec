@@ -9,7 +9,7 @@ Pod::Spec.new do |s|
   s.license        = package_json["license"]
   s.author         = package_json["author"]
   s.platform       = :ios, "9.0"
-  s.source         = { :git => "#{package_json["repository"]["url"]}" }
+  s.source         = { :git => "https://github.com/NeuraLabs/react-native-neura.git" }
   s.source_files   = 'ios/*.{h,m}'
   
   s.dependency 'React',  '>= 0.13.0', '< 1.0.0'
