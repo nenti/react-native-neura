@@ -23,6 +23,14 @@ module.exports = {
         return RNNeuraIntegration.neuraLogout();
     },
 
+    simulateAnEvent: function(eventName) {
+        return RNNeuraIntegration.simulateAnEvent(eventName);
+    },
+
+    subscribeToEvent: function(eventName, eventID, webhookID) {
+        return RNNeuraIntegration.subscribeToEvent(eventName, eventID, webhookID);
+    },
+
     /**
      *
      * @param featureName string mandatory

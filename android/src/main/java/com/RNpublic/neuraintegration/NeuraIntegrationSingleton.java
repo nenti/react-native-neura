@@ -63,22 +63,6 @@ public final class NeuraIntegrationSingleton {
         this.NeuraApiClient.registerAuthStateListener(silentStateListener);
     }
 
-    //
-    public void kaki(){
-        getNeuraApiClient().simulateAnEvent("userArrivedHomeByWalking", new SimulateEventCallBack() {
-            @Override
-            public void onSuccess(String dafuq) {
-                Log.i(getClass().getSimpleName(), "dafuq: "  + dafuq);
-
-            }
-
-            @Override
-            public void onFailure(String dafuqq, String dafuqqq) {
-                Log.i(getClass().getSimpleName(), "dafuqq: "  + dafuqq);
-            }
-        });
-    }
-
     public void onAuth() {
         final String token = getNeuraApiClient().getUserAccessToken();
 

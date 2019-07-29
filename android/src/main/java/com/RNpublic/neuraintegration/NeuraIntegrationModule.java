@@ -4,6 +4,7 @@ import com.neura.resources.authentication.AuthenticateCallback;
 import com.neura.sdk.object.AuthenticationRequest;
 import com.neura.sdk.object.Permission;
 import com.neura.sdk.service.SimulateEventCallBack;
+import com.neura.sdk.service.SubscriptionRequestCallbacks;
 import com.neura.standalonesdk.engagement.EngagementFeatureAction;
 import com.neura.standalonesdk.util.SDKUtils;
 import com.neura.standalonesdk.events.NeuraEventCallBack;
@@ -18,7 +19,7 @@ import com.neura.resources.user.UserDetailsCallbacks;
 import com.neura.resources.user.UserDetails;
 import java.util.Map;
 import android.content.Context;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Log;
 import android.os.Bundle;
 import static com.neura.standalonesdk.engagement.EngagementFeatureAction.CLOSE;
@@ -154,29 +155,6 @@ public class NeuraIntegrationModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    private void authenticateWithPhone(String phone, final Promise promise) {
-        AuthenticationRequest request = new AuthenticationRequest(Permission.list(new String[]{"presenceAtHome",  "sleepingHabits"}));
-        request.setPhone(phone);
-        NeuraIntegrationSingleton.getInstance().getNeuraApiClient().authenticate(request, new AuthenticateCallback() {
-            @Override
-            public void onSuccess(AuthenticateData authenticateData) {
-                String successMessage = "Successfully authenticated with neura. Token: " +  authenticateData.getAccessToken()+  " User Id: " +  authenticateData.getNeuraUserId();
-                Log.i(getClass().getSimpleName(), successMessage);
-                promise.resolve( authenticateData.getAccessToken());
-            }
-
-            @Override
-            public void onFailure(int errorCode) {
-                String errorMessage = "Failed to authenticate with neura. Reason" +  SDKUtils.errorCodeToString(errorCode);
-                Log.e(getClass().getSimpleName(), errorMessage);
-                promise.reject(SDKUtils.errorCodeToString(errorCode), errorMessage);
-            }
-        });
-    }
-
-
-
-    @ReactMethod
     private void authenticateAnon(final Promise promise) {
         String startMessage = "Anon auth starting";
         Log.i(getClass().getSimpleName(), startMessage);
@@ -234,8 +212,23 @@ public class NeuraIntegrationModule extends ReactContextBaseJavaModule {
             Log.i(getClass().getSimpleName(), "getUserAccessToken Not logged in");
             promise.reject("Not logged in");
         }
-
-
+    }
+    
+    @ReactMethod
+    public void subscribeToEvent(String eventName, String eventID, String webhookID, final Promise promise) {
+        NeuraIntegrationSingleton.getInstance().getNeuraApiClient().subscribeToEvent(eventName, eventID, webhookID, new SubscriptionRequestCallbacks(){
+            @Override
+            public void onSuccess(String eventName, Bundle resultData, String identifier) {
+                promise.resolve("Successfully subscribed to event");
+            }
+            
+            @Override
+            public void onFailure(String eventName, Bundle resultData, int errorCode) {
+                String errorMessage = "Failed to subscribe to event. Reason: " +  SDKUtils.errorCodeToString(errorCode);
+                Log.e(getClass().getSimpleName(), errorMessage);
+                promise.reject(SDKUtils.errorCodeToString(errorCode), errorMessage);
+            }
+        });
     }
 
     @ReactMethod
@@ -254,27 +247,8 @@ public class NeuraIntegrationModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
-    public void notificationHandler(ReadableMap details, final Promise promise) {
-        Map detailsMap = NeuraIntegrationMapUtil.recursivelyDeconstructReadableMap(details);
-        Context mContext = getReactApplicationContext().getCurrentActivity().getBaseContext();
-
-        boolean isNeuraPush = NeuraPushCommandFactory.getInstance().isNeuraPush(mContext, detailsMap, new NeuraEventCallBack() {
-            @Override
-            public void neuraEventDetected(NeuraEvent event) {
-                //Log.d("Neura event:", event);
-                promise.resolve(event);
-            }
-        });
-
-
-        if(!isNeuraPush) {
-            promise.reject(new Error("Neura event not found"));
-        }
-    }
-
-    @ReactMethod
-    public void simulateAnEvent(final Promise promise) {
-        NeuraIntegrationSingleton.getInstance().getNeuraApiClient().simulateAnEvent("userArrivedHomeByWalking", new SimulateEventCallBack(){
+    public void simulateAnEvent(String eventName, final Promise promise) {
+        NeuraIntegrationSingleton.getInstance().getNeuraApiClient().simulateAnEvent(eventName, new SimulateEventCallBack(){
             @Override
             public void onSuccess(String s) {
                 String debug = "Fired, check server: ";
@@ -289,7 +263,6 @@ public class NeuraIntegrationModule extends ReactContextBaseJavaModule {
                 promise.reject(errorMessage);
             }
         });
-
     }
 
     @ReactMethod

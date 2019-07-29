@@ -1,5 +1,6 @@
 #import <Foundation/Foundation.h>
 #import "RNNeuraIntegration.h"
+#import <React/RCTLog.h>
 #import <NeuraSDK/NeuraSDK.h>
 
 @implementation RNNeuraIntegration
@@ -61,8 +62,33 @@ RCT_EXPORT_METHOD(tagEngagementAttempt:
 {
     NSError *err = nil;
     [NeuraSDK.shared tagEngagementAttempt:featureName value:value instanceId:instanceId error:&err];
+}
 
+RCT_EXPORT_METHOD(simulateAnEvent:
+                  (NSString *)eventName)
+{
+    NEventName enumEventName = [NEvent enumForEventName:eventName];
+    [NeuraSDK.shared simulateEvent:(enumEventName) callback:^(NeuraAPIResult * result) {
+    if (!result.success) {
+        RCTLogInfo(@"Not able to simulate event: %@, Error: %@", eventName, result.errorString);
+    } else {
+        RCTLogInfo(@"Simulated event: %@", eventName);
+    }}];
+}
 
+RCT_EXPORT_METHOD(subscribeToEvent:
+                  (NSString *)eventName 
+                  eventID: (NSString *) eventID 
+                  webhookID: (NSString *) webhookID)
+{
+    NSubscription *subscription = [[NSubscription alloc] initWithEventName:eventName identifier:eventID webhookId:webhookID method:NSubscriptionMethodWebhook];
+    [NeuraSDK.shared addSubscription:(subscription) callback:^(NeuraAPIResult * _Nonnull result) {
+        if (!result.success) {
+            RCTLogInfo(@"Error while trying to create subscription: %@, Error: %@", eventID, result.error);
+        } else {
+            RCTLogInfo(@"Created subscription: %@", eventName);
+        }
+    }];
 }
 
 RCT_EXPORT_METHOD(neuraLogout)
