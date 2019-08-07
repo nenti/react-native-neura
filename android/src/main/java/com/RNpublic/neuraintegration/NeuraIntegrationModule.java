@@ -1,27 +1,25 @@
 package com.RNpublic.neuraintegration;
 
-import com.neura.resources.authentication.AuthenticateCallback;
-import com.neura.sdk.object.AuthenticationRequest;
-import com.neura.sdk.object.Permission;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.iid.InstanceIdResult;
 import com.neura.sdk.service.SimulateEventCallBack;
 import com.neura.sdk.service.SubscriptionRequestCallbacks;
 import com.neura.standalonesdk.engagement.EngagementFeatureAction;
 import com.neura.standalonesdk.util.SDKUtils;
-import com.neura.standalonesdk.events.NeuraEventCallBack;
-import com.neura.standalonesdk.events.NeuraEvent;
-import com.neura.standalonesdk.events.NeuraPushCommandFactory;
 import com.neura.resources.authentication.AnonymousAuthenticateCallBack;
 import com.neura.resources.authentication.AnonymousAuthenticateData;
 import com.neura.sdk.object.AnonymousAuthenticationRequest;
-import com.neura.resources.authentication.AuthenticateData;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.neura.resources.user.UserDetailsCallbacks;
 import com.neura.resources.user.UserDetails;
-import java.util.Map;
-import android.content.Context;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import android.util.Log;
 import android.os.Bundle;
+
+import static com.android.volley.VolleyLog.TAG;
 import static com.neura.standalonesdk.engagement.EngagementFeatureAction.CLOSE;
 import static com.neura.standalonesdk.engagement.EngagementFeatureAction.OPT_OUT;
 import static com.neura.standalonesdk.engagement.EngagementFeatureAction.REJECT;
@@ -31,7 +29,6 @@ import static com.neura.standalonesdk.engagement.EngagementFeatureAction.SUCCESS
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.Promise;
-import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.Callback;
 
@@ -135,7 +132,7 @@ public class NeuraIntegrationModule extends ReactContextBaseJavaModule {
      * featureName = "button_pressed", value = "green"
      * Returns:
      * error code, if success SUCCESS, otherwise ERROR_MANDATORY_PARAM , ERROR_CLIENT_NOT_LOGGED_IN ERROR_CLIENT_INVALID_FEATURE_NAME_PARAM, ERROR_CLIENT_INVALID_VALUE_PARAM, ERROR_CLIENT_ENGAGEMENT_DISABLED
-     * @param phone
+     * @param featureName
      * @param promise
      */
     @ReactMethod
@@ -154,44 +151,59 @@ public class NeuraIntegrationModule extends ReactContextBaseJavaModule {
 
     }
 
+
     @ReactMethod
     private void authenticateAnon(final Promise promise) {
-        String startMessage = "Anon auth starting";
-        Log.i(getClass().getSimpleName(), startMessage);
+        Log.i(getClass().getSimpleName(), "Anon auth starting");
 
-        if ( NeuraIntegrationSingleton.getInstance().getNeuraApiClient().isLoggedIn()) {
+        if (NeuraIntegrationSingleton.getInstance().getNeuraApiClient().isLoggedIn()) {
             Log.i(getClass().getSimpleName(), "Already Logged In");
             NeuraIntegrationSingleton.getInstance().onAuth();
             promise.resolve(LoginSuccessMessage);
         } else {
             Log.i(getClass().getSimpleName(), "Will attempt to log in");
-            //Get the FireBase Instance ID, we will use it to instantiate AnonymousAuthenticationRequest
-            String pushToken = FirebaseInstanceId.getInstance().getToken();
 
-            Log.i(getClass().getSimpleName(), "PUSH TOKEN:" + pushToken);
+            FirebaseInstanceId.getInstance().getInstanceId()
+                    .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                            if (!task.isSuccessful()) {
+                                Log.w(TAG, "getInstanceId failed", task.getException());
+                                return;
+                            }
 
-            //Instantiate AnonymousAuthenticationRequest instance.
-            AnonymousAuthenticationRequest request = new AnonymousAuthenticationRequest(pushToken);
+                            // Get new Instance ID token
+                            if (task.getResult() != null) {
+                                String pushToken = task.getResult().getToken();
 
-            //Pass the AnonymousAuthenticationRequest instance and register a call back for success and failure events.
-            NeuraIntegrationSingleton.getInstance().getNeuraApiClient().authenticate(request, new AnonymousAuthenticateCallBack() {
-                @Override
-                public void onSuccess(AnonymousAuthenticateData authenticateData) {
-                    NeuraIntegrationSingleton.getInstance().registerAuthStateListener();
-                    String debug = LoginSuccessMessage + " Neura Id: "  + authenticateData.getNeuraUserId() + " Is logged in is: " +  NeuraIntegrationSingleton.getInstance().getNeuraApiClient().isLoggedIn();
-                    Log.i(getClass().getSimpleName(), debug);
-                    promise.resolve(debug);
-                }
+                                Log.i(getClass().getSimpleName(), "Neura Push Token:" + pushToken);
 
-                @Override
-                public void onFailure(int errorCode) {
-                    String errorMessage = "Failed to authenticate with neura. Reason" +  SDKUtils.errorCodeToString(errorCode);
-                    Log.e(getClass().getSimpleName(), errorMessage);
-                    promise.reject(SDKUtils.errorCodeToString(errorCode), errorMessage);
-                }
-            });
+                                //Instantiate AnonymousAuthenticationRequest instance.
+                                AnonymousAuthenticationRequest request = new AnonymousAuthenticationRequest(pushToken);
 
-            Log.i(getClass().getSimpleName(), "Attempted log in");
+                                //Pass the AnonymousAuthenticationRequest instance and register a call back for success and failure events.
+                                NeuraIntegrationSingleton.getInstance().getNeuraApiClient().authenticate(request, new AnonymousAuthenticateCallBack() {
+                                    @Override
+                                    public void onSuccess(AnonymousAuthenticateData authenticateData) {
+                                        NeuraIntegrationSingleton.getInstance().registerAuthStateListener();
+                                        String debug = LoginSuccessMessage + " Neura Id: "  + authenticateData.getNeuraUserId();
+                                        Log.i(getClass().getSimpleName(), debug);
+                                        promise.resolve(debug);
+                                    }
+
+                                    @Override
+                                    public void onFailure(int errorCode) {
+                                        String errorMessage = "Failed to authenticate with neura. Reason" +  SDKUtils.errorCodeToString(errorCode);
+                                        Log.e(getClass().getSimpleName(), errorMessage);
+                                        promise.reject(SDKUtils.errorCodeToString(errorCode), errorMessage);
+                                    }
+                                });
+
+                                Log.i(getClass().getSimpleName(), "Attempted log in");
+                            }
+                        }
+
+                    });
         }
     }
 

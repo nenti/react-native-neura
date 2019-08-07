@@ -41,10 +41,17 @@ public class NeuraIntegrationEventsService extends FirebaseMessagingService {
         } else {
             Log.i(getClass().getSimpleName(), "received non Neura event should have been ignored");
         }
-
-
     }
 
+    @Override
+    public void onNewToken(String token) {
+        Log.i(getClass().getSimpleName(), "Refreshed token: " + token);
+        // Important! Update Neura with your new firebase token
+        NeuraIntegrationSingleton.getInstance().getNeuraApiClient().registerFirebaseToken(token);
+        // If you want to send messages to this application instance or
+        // manage this apps subscriptions on the server side, send the
+        // Instance ID token to your app server.
+    }
 
     private void generateNotification(Context context, String eventText) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context);

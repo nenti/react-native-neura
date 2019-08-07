@@ -7,7 +7,6 @@ import com.neura.resources.authentication.AnonymousAuthenticationStateListener;
 import com.neura.resources.authentication.AuthenticationState;
 import com.neura.resources.user.UserDetails;
 import com.neura.resources.user.UserDetailsCallbacks;
-import com.neura.sdk.service.SimulateEventCallBack;
 import com.neura.standalonesdk.service.NeuraApiClient;
 import com.neura.standalonesdk.engagement.NeuraEngagements;
 
