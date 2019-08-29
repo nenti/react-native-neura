@@ -15,6 +15,10 @@ module.exports = {
         return RNNeuraIntegration.getUserId();
     },
 
+    setExternalId: function(externalId) {
+        return RNNeuraIntegration.setExternalId(externalId);
+    },
+
     isAuthenticated: function() {
         return RNNeuraIntegration.isAuthenticated();
     },

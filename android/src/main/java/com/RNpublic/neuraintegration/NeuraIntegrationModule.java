@@ -259,6 +259,11 @@ public class NeuraIntegrationModule extends ReactContextBaseJavaModule {
     }
 
     @ReactMethod
+    public void setExternalId(String externalId) {
+        NeuraIntegrationSingleton.getInstance().getNeuraApiClient().setExternalId(externalId);
+    }
+
+    @ReactMethod
     public void simulateAnEvent(String eventName, final Promise promise) {
         NeuraIntegrationSingleton.getInstance().getNeuraApiClient().simulateAnEvent(eventName, new SimulateEventCallBack(){
             @Override
